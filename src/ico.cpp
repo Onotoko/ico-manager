@@ -34,7 +34,7 @@ namespace eosio {
                 eosio_assert(it->SPLIT_SECTION_PAYOUT_RATIO != 0, "configuration is invalid, payout must be greater than 0" );
             }
 
-            if(total_size != 0){
+            if(total_size != 100){
                 eosio_assert(false, "configuration is invalid, percentile must amount to 100");
             }
         }
@@ -95,7 +95,7 @@ namespace eosio {
                 current_percentile += it->SPLIT_SECTION_PERCENTILE;
 
                 if(target_percentile < current_percentile){
-                    ico_quantity = asset(MIN(conf.remaining, it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount) * 10000, N(TOKEN_NAME));
+                    ico_quantity = asset(MIN(conf.remaining, it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount) * 10000, N(TOKEN_NAME)); // TODO: The TOKEN_NAME won't work with this N() macro
                     refund_quantity = quantity - (ico_quantity / it->SPLIT_SECTION_PAYOUT_RATIO);
                     break;
                 }
