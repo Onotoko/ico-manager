@@ -13,7 +13,7 @@ namespace eosio {
         eosio_assert(ico_config.get().init_time == 0, "ico has already been started");
 
         transaction trx;
-        asset ico(TOKEN_SUPPLY, N(TOKEN_NAME));
+        asset ico(ico_settings.TOKEN_SUPPLY, N(TOKEN_NAME));
 
         /* create the token */
         trx.actions.emplace_back(
@@ -22,13 +22,20 @@ namespace eosio {
                 N(create),
                 std::make_tuple(_self, ico));
 
+        /* issue the token */
+        trx.actions.emplace_back(
+                eosio::permission_level{_self, N(active)},
+                N(eosio.token),
+                N(issue),
+                std::make_tuple(_self, asset(ico_settings.CONTRACT_TOKEN_SUPPLY, N(string(TOKEN_NAME))), "issuing token to self"));
+
         /* send the transaction */
         trx.send(_self, _self, false);
 
         /* validate the config is correct */
         uint32_t total_size = 0;
-        if(!sections.empty()) {
-            for (auto it = sections.begin(); it != sections.end(); ++it){
+        if(!ico_settings.sections.empty()) {
+            for (auto it = ico_settings.sections.begin(); it != ico_settings.sections.end(); ++it){
                 total_size += it->SPLIT_SECTION_PERCENTILE;
 
                 eosio_assert(it->SPLIT_SECTION_PAYOUT_RATIO != 0, "configuration is invalid, payout must be greater than 0" );
@@ -40,7 +47,7 @@ namespace eosio {
         }
 
         /* initalise the contract */
-        ico_config.set({now(), now() + CUT_OFF_TIME_SECONDS, ico.amount, ico.amount}, _self);
+        ico_config.set({now(), now() + ico_settings.CUT_OFF_TIME_SECONDS, ico.amount, ico.amount}, _self);
 
     }
 
@@ -68,7 +75,7 @@ namespace eosio {
         asset defaultasset(0);
         /* when eos is received, purchase the token */
         if (transfer.quantity.symbol == defaultasset.symbol) {
-            purchase(transfer.from, transfer.quantity);
+      //      purchase(transfer.from, transfer.quantity);
         }
     }
 
@@ -81,8 +88,8 @@ namespace eosio {
         auto conf = ico_config.get();
 
         /* if empty map 1:1 */
-        if (sections.empty()) {
-            ico_quantity = asset(MIN(quantity.amount, conf.remaining) * 10000, N(TOKEN_NAME));
+        if (ico_settings.sections.empty()) {
+            ico_quantity = asset(MIN(quantity.amount, conf.remaining), N(string(TOKEN_NAME)));
             refund_quantity = quantity - ico_quantity;
 
         } else {
@@ -91,11 +98,11 @@ namespace eosio {
             uint64_t target_percentile = conf.remaining / conf.quantity;
             uint64_t current_percentile = 0;
 
-            for (auto it = sections.begin(); it != sections.end(); ++it){
+            for (auto it = ico_settings.sections.begin(); it != ico_settings.sections.end(); ++it){
                 current_percentile += it->SPLIT_SECTION_PERCENTILE;
 
                 if(target_percentile < current_percentile){
-                    ico_quantity = asset(MIN(conf.remaining, it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount) * 10000, N(TOKEN_NAME)); // TODO: The TOKEN_NAME won't work with this N() macro
+                    ico_quantity = asset(MIN(conf.remaining, it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount), N(string(TOKEN_NAME))); // TODO: The TOKEN_NAME won't work with this N() macro
                     refund_quantity = quantity - (ico_quantity / it->SPLIT_SECTION_PAYOUT_RATIO);
                     break;
                 }
@@ -103,11 +110,11 @@ namespace eosio {
         }
 
         /* send the token */
-        send_funds(_self, user, ico_quantity, PURCHASE_MEMO);
+        send_funds(_self, user, ico_quantity, ico_settings.PURCHASE_MEMO);
 
         /* if we've ran out of tokens, return the change */
         if(refund_quantity > asset(0)) {
-            send_funds(_self, user, refund_quantity, PURCHASE_MEMO);
+            send_funds(_self, user, refund_quantity, ico_settings.PURCHASE_MEMO);
         }
 
     }
@@ -134,12 +141,16 @@ namespace eosio {
 
 
     void ico::apply_onerror(const onerror &error) {
+        /* resubmit any failed transactions */
+        transaction trx = error.unpack_sent_trx();
 
+        trx.send(_self, _self, false);
     }
 
     extern "C"
     {
     void apply(uint64_t receiver, uint64_t code, uint64_t action) {
+
         auto self = receiver;
         eosio::ico thiscontract(self);
 
@@ -155,8 +166,8 @@ namespace eosio {
                 thiscontract.on(unpack_action_data<eosio::currency::transfer>());
                 break;
 
-        //    default:
-         //   EOSIO_API(eosio::ico, (init))
+            default:
+           EOSIO_API(eosio::ico, (init))
         }
     }
     }

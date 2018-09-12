@@ -15,7 +15,6 @@
 
 
 
-
 namespace eosio {
 
     //@abi table config
@@ -39,6 +38,7 @@ namespace eosio {
 
     private:
         ico_config ico_config;
+        settings ico_settings;
 
         bool is_active();
         void purchase(account_name user, asset quantity);
@@ -47,13 +47,13 @@ namespace eosio {
 
 
     public:
-        ico(account_name owner):contract(owner), ico_config(_self, N(config)){}
+        ico(account_name owner):contract(owner), ico_config(_self, N(config)), ico_settings(){}
 
-        ///@ abi action
-        void init();
+        ///@abi action
+          void init();
 
-        void apply_onerror(const onerror &error);
-        void on(eosio::currency::transfer const &t);
+          void apply_onerror(const onerror &error);
+          void on(eosio::currency::transfer const &t);
 
     };
 
