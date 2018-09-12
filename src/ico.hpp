@@ -21,14 +21,13 @@ namespace eosio {
     struct config{
         uint64_t init_time = 0;
         uint64_t cutoff_time = 0;
-        int64_t quantity = 0; /* contracts quantity, not total */
-        int64_t remaining = 0; /* quantity remaining */
+        int64_t quantity = 0; /* contracts quantity */
 
         uint64_t primary_key(){
             return init_time;
         }
 
-        EOSLIB_SERIALIZE(config, (init_time)(cutoff_time)(quantity)(remaining))
+        EOSLIB_SERIALIZE(config, (init_time)(cutoff_time)(quantity))
     };
 
     typedef eosio::singleton<N(config), config> ico_config;
@@ -43,7 +42,7 @@ namespace eosio {
         bool is_active();
         void purchase(account_name user, asset quantity);
         void send_funds(account_name from, account_name to, asset quantity, std::string memo);
-        asset get_balance(symbol_name symbol);
+        asset get_balance(symbol_type symbol);
 
 
     public:

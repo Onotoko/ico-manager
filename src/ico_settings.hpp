@@ -6,6 +6,7 @@
 #define EOSIO_ICO_SETTINGS_HPP
 
 #include <eosiolib/eosio.hpp>
+#include <eosiolib/symbol.hpp>
 #include <boost/assign/list_of.hpp>
 #include <vector>
 
@@ -24,17 +25,15 @@ namespace eosio {
         ///SETTINGS///
 
     public:
-        /* token name */
-        const char *TOKEN_NAME = "ICO";
 
-        /* token quantity */
-        const int64_t TOKEN_SUPPLY = 10000000000000;
+        /* account name of token contract */
+        account_name TOKEN_CONTRACT = N(eosio.token);
 
-        /* tokens used by contract */
-        const  int64_t CONTRACT_TOKEN_SUPPLY = 8000000000000;
+        /* token name(Precision, name) */
+        const symbol_type TOKEN_SYMBOL = S(4,DEF);
 
         /* cut-off time in seconds after launch, set to 0 to disable */
-        const uint64_t CUT_OFF_TIME_SECONDS = catalogue::ONE_WEEK * 4;
+        const uint64_t CUT_OFF_TIME_SECONDS = ONE_WEEK * 4;
 
         /* the memo sent after a purchase */
         const char *PURCHASE_MEMO = "Thank you for purchasing ICO Token";

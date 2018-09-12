@@ -8,29 +8,10 @@
 namespace eosio {
 
     void ico::init() {
+        /* validates the configuration */
         require_auth(_self);
 
-        eosio_assert(ico_config.get().init_time == 0, "ico has already been started");
-
-        transaction trx;
-        asset ico(ico_settings.TOKEN_SUPPLY, N(TOKEN_NAME));
-
-        /* create the token */
-        trx.actions.emplace_back(
-                eosio::permission_level{_self, N(active)},
-                N(eosio.token),
-                N(create),
-                std::make_tuple(_self, ico));
-
-        /* issue the token */
-        trx.actions.emplace_back(
-                eosio::permission_level{_self, N(active)},
-                N(eosio.token),
-                N(issue),
-                std::make_tuple(_self, asset(ico_settings.CONTRACT_TOKEN_SUPPLY, N(string(TOKEN_NAME))), "issuing token to self"));
-
-        /* send the transaction */
-        trx.send(_self, _self, false);
+        eosio_assert(!ico_config.exists(), "ico has already been started");
 
         /* validate the config is correct */
         uint32_t total_size = 0;
@@ -46,25 +27,27 @@ namespace eosio {
             }
         }
 
+        /* check the account configuration */
+        eosio_assert(is_account(ico_settings.TOKEN_CONTRACT), "token contract account does not exist");
+
         /* initalise the contract */
-        ico_config.set({now(), now() + ico_settings.CUT_OFF_TIME_SECONDS, ico.amount, ico.amount}, _self);
+        ico_config.set({now(), now() + ico_settings.CUT_OFF_TIME_SECONDS, get_balance(ico_settings.TOKEN_SYMBOL).amount}, _self);
 
     }
 
-    asset ico::get_balance(symbol_name symbol) {
+    asset ico::get_balance(symbol_type symbol) {
         /* gets the balance of the symbol */
+        eosio::token t(ico_settings.TOKEN_CONTRACT);
 
-        eosio::token t(N(eosio.token));
-        const auto sym_name = eosio::symbol_type(symbol);
 
-        return t.get_balance(_self, sym_name);
+        return t.get_balance(_self, symbol.name());
     }
 
     bool ico::is_active() {
         /* if not initalised or cutoff has expired ( unless disabled ) or there's no funds left */
         auto conf = ico_config.get();
 
-        return (conf.init_time != 0 && (conf.cutoff_time > now() || conf.cutoff_time == 0) && conf.remaining > 0);
+        return (conf.init_time != 0 && (conf.cutoff_time > now() || conf.cutoff_time == 0) && get_balance(ico_settings.TOKEN_SYMBOL).amount > 0);
     }
 
     void ico::on(eosio::currency::transfer const &transfer) {
@@ -75,12 +58,16 @@ namespace eosio {
         asset defaultasset(0);
         /* when eos is received, purchase the token */
         if (transfer.quantity.symbol == defaultasset.symbol) {
-      //      purchase(transfer.from, transfer.quantity);
+
+            /* only accept whole tokens */
+            if(transfer.quantity.amount % 1 == 0){
+              purchase(transfer.from, transfer.quantity);
+            }
+
         }
     }
 
     void ico::purchase(account_name user, asset quantity) {
-
         asset ico_quantity;
         asset refund_quantity;
 
@@ -89,21 +76,23 @@ namespace eosio {
 
         /* if empty map 1:1 */
         if (ico_settings.sections.empty()) {
-            ico_quantity = asset(MIN(quantity.amount, conf.remaining), N(string(TOKEN_NAME)));
-            refund_quantity = quantity - ico_quantity;
+            print("SECTION 1");
+            ico_quantity = asset(MIN(quantity.amount, get_balance(ico_settings.TOKEN_SYMBOL).amount), ico_settings.TOKEN_SYMBOL);
+            refund_quantity = asset(quantity.amount - ico_quantity.amount);
 
         } else {
 
             /* else figure out what percentile we're in */
-            uint64_t target_percentile = conf.remaining / conf.quantity;
+            uint64_t target_percentile = 100 * (1 - ((double)get_balance(ico_settings.TOKEN_SYMBOL).amount / conf.quantity)) ;
             uint64_t current_percentile = 0;
 
             for (auto it = ico_settings.sections.begin(); it != ico_settings.sections.end(); ++it){
                 current_percentile += it->SPLIT_SECTION_PERCENTILE;
 
+
                 if(target_percentile < current_percentile){
-                    ico_quantity = asset(MIN(conf.remaining, it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount), N(string(TOKEN_NAME))); // TODO: The TOKEN_NAME won't work with this N() macro
-                    refund_quantity = quantity - (ico_quantity / it->SPLIT_SECTION_PAYOUT_RATIO);
+                    ico_quantity = asset(MIN(get_balance(ico_settings.TOKEN_SYMBOL).amount, it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount), ico_settings.TOKEN_SYMBOL);
+                    refund_quantity = asset(quantity.amount - (ico_quantity.amount / it->SPLIT_SECTION_PAYOUT_RATIO));
                     break;
                 }
             }
@@ -132,10 +121,6 @@ namespace eosio {
 
         /* send the transaction */
         trx.send(from + to + quantity.amount + current_time(), _self, false);
-
-        /* update our available token supply */
-        auto it = ico_config.get();
-        ico_config.set({it.init_time, it.cutoff_time, (it.quantity - quantity.amount), it.remaining } ,_self);
 
     }
 

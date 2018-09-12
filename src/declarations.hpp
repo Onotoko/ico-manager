@@ -9,7 +9,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
-namespace catalogue{
+namespace eosio{
 
     const static uint32_t ONE_SECOND = 1;
     const static uint32_t ONE_MINUTE = ONE_SECOND * 60;
