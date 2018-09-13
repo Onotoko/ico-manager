@@ -1,7 +1,8 @@
-//
-// Created by michael on 10/09/18.
-//
-
+/*
+ * Description: Selection of time related utilities
+ * Author: Michael Fletcher | EOS42
+ * Date: 11/09/2018
+ */
 #ifndef EOSIO_ICO_SETTINGS_HPP
 #define EOSIO_ICO_SETTINGS_HPP
 
@@ -36,7 +37,7 @@ namespace eosio {
         const uint64_t CUT_OFF_TIME_SECONDS = ONE_WEEK * 4;
 
         /* the memo sent after a purchase */
-        const char *PURCHASE_MEMO = "Thank you for purchasing ICO Token";
+        const char *PURCHASE_MEMO = "Thank you for purchasing DEF Token";
 
     /* set to empty for token to always be 1:1 */
         const std::vector<section> sections = boost::assign::list_of

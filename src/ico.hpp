@@ -1,6 +1,8 @@
-//
-// Created by michael on 10/09/18.
-//
+/*
+ * Description: Selection of time related utilities
+ * Author: Michael Fletcher | EOS42
+ * Date: 11/09/2018
+ */
 
 #ifndef EOSIO_ICO_HPP
 #define EOSIO_ICO_HPP
@@ -12,6 +14,7 @@
 #include <eosio.token/eosio.token.hpp>
 
 #include "ico_settings.hpp"
+#include <cmath>
 
 
 

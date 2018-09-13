@@ -1,7 +1,8 @@
-//
-// Created by michael on 10/09/18.
-//
-
+/*
+ * Description: Selection of time related utilities
+ * Author: Michael Fletcher | EOS42
+ * Date: 11/09/2018
+ */
 #include "ico.hpp"
 
 
@@ -68,30 +69,30 @@ namespace eosio {
     }
 
     void ico::purchase(account_name user, asset quantity) {
-        asset ico_quantity;
-        asset refund_quantity;
+        asset ico_quantity = asset(0);
+        asset refund_quantity = asset(0);
 
         /* get the current stats */
         auto conf = ico_config.get();
 
         /* if empty map 1:1 */
         if (ico_settings.sections.empty()) {
-            print("SECTION 1");
-            ico_quantity = asset(MIN(quantity.amount, get_balance(ico_settings.TOKEN_SYMBOL).amount), ico_settings.TOKEN_SYMBOL);
+            ico_quantity = asset(MIN(quantity.amount, get_balance(ico_settings.TOKEN_SYMBOL).amount),
+                                 ico_settings.TOKEN_SYMBOL);
+
             refund_quantity = asset(quantity.amount - ico_quantity.amount);
 
         } else {
 
-            /* else figure out what percentile we're in */
-            uint64_t target_percentile = 100 * (1 - ((double)get_balance(ico_settings.TOKEN_SYMBOL).amount / conf.quantity)) ;
-            uint64_t current_percentile = 0;
+            double current_percentile = 100.0 * (1.0 - ((double) get_balance(ico_settings.TOKEN_SYMBOL).amount / conf.quantity));
+            double check_percentile = 0;
 
-            for (auto it = ico_settings.sections.begin(); it != ico_settings.sections.end(); ++it){
-                current_percentile += it->SPLIT_SECTION_PERCENTILE;
-
-
-                if(target_percentile < current_percentile){
-                    ico_quantity = asset(MIN(get_balance(ico_settings.TOKEN_SYMBOL).amount, it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount), ico_settings.TOKEN_SYMBOL);
+            for (auto it = ico_settings.sections.begin(); it != ico_settings.sections.end(); ++it) {
+                check_percentile += it->SPLIT_SECTION_PERCENTILE;
+                if (ceil(current_percentile) < check_percentile) {
+                    ico_quantity = asset(MIN(get_balance(ico_settings.TOKEN_SYMBOL).amount,
+                                             it->SPLIT_SECTION_PAYOUT_RATIO * quantity.amount),
+                                         ico_settings.TOKEN_SYMBOL);
                     refund_quantity = asset(quantity.amount - (ico_quantity.amount / it->SPLIT_SECTION_PAYOUT_RATIO));
                     break;
                 }
@@ -102,11 +103,12 @@ namespace eosio {
         send_funds(_self, user, ico_quantity, ico_settings.PURCHASE_MEMO);
 
         /* if we've ran out of tokens, return the change */
-        if(refund_quantity > asset(0)) {
+        if (refund_quantity > asset(0)) {
             send_funds(_self, user, refund_quantity, ico_settings.PURCHASE_MEMO);
         }
 
     }
+
 
 
     void ico::send_funds(account_name from, account_name to, asset quantity, std::string memo) {
