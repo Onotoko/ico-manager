@@ -1,10 +1,10 @@
-#ICO Manager
+# ICO Manager
 
 This code will assist in managing the distribution of your ICO. Whenever EOS is received, the token will be distributed proportionally
 inline with the setting configured. This is an initial version of the code and many improvements can be made, please feel free to contribute
 any improvements.
 
-#Setup
+# Setup
 The only file you will need to amend is ico_settings.hpp, the following configurations can be made:
 
 TOKEN_CONTRACT - The name of the contract running the ICO ( Only standard eosio.token contract supported and tested )
@@ -15,7 +15,7 @@ sections - Each section represents a percentile and it's payout ratio. See code 
 
 Once configured and launched, any users who send EOS to the contract will be rewarded as configured in the tokens.
 
-#Notes
+# Notes
 - The token contract must be launched, your token created and issued to the account this contract will exist on
 - The contract will use all available tokens in the account, anything excess you will need to keep seperate
 - Only whole EOS are allowed
