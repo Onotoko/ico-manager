@@ -7,11 +7,11 @@ any improvements.
 # Setup
 The only file you will need to amend is ico_settings.hpp, the following configurations can be made:
 
-TOKEN_CONTRACT - The name of the contract running the ICO ( Only standard eosio.token contract supported and tested )
-TOKEN_SYMBOL - The name of the token you plan to distribute
-CUT_OFF_TIME_SECONDS - The total running period of the contract. Set to 0 to run forever.
-PURCHASE_MEMO - The Memo to send the user when they have purchased tokens.
-sections - Each section represents a percentile and it's payout ratio. See code for example.
+- TOKEN_CONTRACT - The name of the contract running the ICO ( Only standard eosio.token contract supported and tested )
+- TOKEN_SYMBOL - The name of the token you plan to distribute
+- CUT_OFF_TIME_SECONDS - The total running period of the contract. Set to 0 to run forever.
+- PURCHASE_MEMO - The Memo to send the user when they have purchased tokens.
+- sections - Each section represents a percentile and it's payout ratio. See code for example.
 
 Once configured and launched, any users who send EOS to the contract will be rewarded as configured in the tokens.
 
