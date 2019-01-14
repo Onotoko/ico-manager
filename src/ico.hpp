@@ -20,15 +20,12 @@
 
 namespace eosio {
 
-    //@abi table config
-    struct config{
+    TABLE config{
         uint64_t init_time = 0;
         uint64_t cutoff_time = 0;
         int64_t quantity = 0; /* contracts quantity */
 
-        uint64_t primary_key(){
-            return init_time;
-        }
+        uint64_t primary_key() const{return init_time; }
 
         EOSLIB_SERIALIZE(config, (init_time)(cutoff_time)(quantity))
     };
@@ -36,7 +33,7 @@ namespace eosio {
     typedef eosio::singleton<N(config), config> ico_config;
 
 
-    class ico : public eosio::contract {
+    CONTRACT ico : public eosio::contract {
 
     private:
         ico_config ico_config;
@@ -49,17 +46,17 @@ namespace eosio {
 
 
     public:
-        ico(account_name owner):contract(owner), ico_config(_self, N(config)), ico_settings(){}
+          ico(account_name owner):contract(owner), ico_config(_self, N(config)), ico_settings(){}
 
-        ///@abi action
-          void init();
+
+          ACTION init();
+          ACTION on(eosio::currency::transfer const &t);
 
           void apply_onerror(const onerror &error);
-          void on(eosio::currency::transfer const &t);
 
     };
 
-
+    EOSIO_DISPATCH(ico, (init)(on))
 
 }
 

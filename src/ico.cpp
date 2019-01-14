@@ -8,7 +8,7 @@
 
 namespace eosio {
 
-    void ico::init() {
+    ACTION ico::init() {
         /* validates the configuration */
         require_auth(_self);
 
@@ -51,7 +51,7 @@ namespace eosio {
         return (conf.init_time != 0 && (conf.cutoff_time > now() || conf.cutoff_time == 0) && get_balance(ico_settings.TOKEN_SYMBOL).amount > 0);
     }
 
-    void ico::on(eosio::currency::transfer const &transfer) {
+    ACTION ico::on(eosio::currency::transfer const &transfer) {
         if (transfer.from == _self) return;
 
         eosio_assert(is_active(), "ico is not active");
