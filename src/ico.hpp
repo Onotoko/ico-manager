@@ -50,13 +50,11 @@ namespace eosio {
 
 
           ACTION init();
-          ACTION on(eosio::currency::transfer const &t);
+          void on(eosio::currency::transfer const &t);
 
           void apply_onerror(const onerror &error);
 
     };
-
-    EOSIO_DISPATCH(ico, (init)(on))
 
 }
 

@@ -61,6 +61,7 @@ namespace eosio {
         if (transfer.quantity.symbol == defaultasset.symbol) {
 
             /* only accept whole tokens */
+            //Hmm, This condition always be true
             if(transfer.quantity.amount % 1 == 0){
               purchase(transfer.from, transfer.quantity);
             }
